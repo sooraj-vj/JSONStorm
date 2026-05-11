@@ -1,0 +1,1 @@
+{"id":"1","description":"Find high-scoring posts with multiple answers, sorted by most recent activity","collection":"posts","filter":{"score":{"$gt":50},"answerCount":{"$gte":2}},"projection":{"postId":1,"title":1,"score":1,"answerCount":1,"lastActivityDate":1},"sort":{"lastActivityDate":-1},"limit":50}

@@ -1,0 +1,62 @@
+Collection: users  (~20,000 documents)
+Fields:
+  aboutMe                                  string               e.g. <p><strong>I am currently looking for a Job in London</st...
+  accountId                                int                  e.g. 53576
+  badges                                   array<object>        e.g. (object)
+  badges[].badgeId                         int                  e.g. 6775
+  badges[].class                           int                  e.g. 3
+  badges[].date                            date                 e.g. 2010-11-13T15:24:22.880000
+  badges[].name                            string               e.g. Student
+  creationDate                             date                 e.g. 2010-11-13T14:21:27.580000
+  displayName                              string               e.g. Björn Pollex
+  downVotes                                int                  e.g. 0
+  lastAccessDate                           date                 e.g. 2016-01-29T11:13:50.240000
+  location                                 string               e.g. Berlin, Germany
+  reputation                               int                  e.g. 185
+  upVotes                                  int                  e.g. 4
+  userId                                   int                  e.g. 3470
+  views                                    int                  e.g. 111
+  websiteUrl                               string               e.g. http://www.northteq.com
+
+Collection: posts  (~20,000 documents)
+Fields:
+  acceptedAnswerId                         int                  e.g. 21909
+  answerCount                              int                  e.g. 6
+  body                                     string               e.g. <p>I am in a biological field (medicine) but I have genui...
+  closedDate                               date                 e.g. 2019-12-12T18:48:20.367000
+  commentCount                             int                  e.g. 4
+  comments                                 array<object>        e.g. (object)
+  comments[].commentId                     int                  e.g. 47522
+  comments[].creationDate                  date                 e.g. 2011-02-13T22:47:37.840000
+  comments[].score                         int                  e.g. 1
+  comments[].text                          string               e.g. You forgot analysis. Probability theory is in my opinion ...
+  comments[].userId                        int                  e.g. 1120
+  communityOwnedDate                       date                 e.g. 2010-08-05T17:58:54.490000
+  creationDate                             date                 e.g. 2011-02-13T22:43:47.557000
+  favoriteCount                            int                  e.g. 0
+  lastActivityDate                         date                 e.g. 2015-01-20T18:34:44.250000
+  lastEditDate                             date                 e.g. 2015-01-08T23:23:19.117000
+  lastEditorUserId                         int                  e.g. 68107
+  ownerUserId                              int                  e.g. 2556
+  parentId                                 int                  e.g. 11669
+  postId                                   int                  e.g. 21901
+  postTypeId                               int                  e.g. 1
+  relatedPosts                             array<object>        e.g. (object)
+  relatedPosts[].linkTypeId                int                  e.g. 1
+  relatedPosts[].postId                    int                  e.g. 7743
+  score                                    int                  e.g. 14
+  tags                                     array<string>        e.g. |soft-question|advice|learning|
+  title                                    string               e.g. In what order should the following areas of mathematics b...
+  viewCount                                int                  e.g. 18700
+
+Collection: postHistory  (~20,000 documents)
+Fields:
+  comment                                  string               e.g. added 34 characters in body; added 6 characters in body; ...
+  creationDate                             date                 e.g. 2010-11-02T16:25:51.580000
+  postHistoryId                            int                  e.g. 22219
+  postHistoryTypeId                        int                  e.g. 1
+  postId                                   int                  e.g. 8658
+  revisionGUID                             string               e.g. 0281f3db-aefe-41f2-9556-957c39a4b0d4
+  text                                     string               e.g. f(x) = 1/cos x then f^n(x).
+  userDisplayName                          string               e.g. anonymous
+  userId                                   int                  e.g. 2563
