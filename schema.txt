@@ -1,62 +1,61 @@
-Collection: users  (~20,000 documents)
+Collection: users  (~23,059 documents)
 Fields:
-  aboutMe                                  string               e.g. <p><strong>I am currently looking for a Job in London</st...
-  accountId                                int                  e.g. 53576
+  aboutMe                                  string               e.g. 
+  accountId                                int                  e.g. 28275005
   badges                                   array<object>        e.g. (object)
-  badges[].badgeId                         int                  e.g. 6775
+  badges[].badgeId                         int                  e.g. 2412210
   badges[].class                           int                  e.g. 3
-  badges[].date                            date                 e.g. 2010-11-13T15:24:22.880000
+  badges[].date                            date                 e.g. 2024-03-04T03:56:20.190000
   badges[].name                            string               e.g. Student
-  creationDate                             date                 e.g. 2010-11-13T14:21:27.580000
-  displayName                              string               e.g. Björn Pollex
+  creationDate                             date                 e.g. 2023-04-11T12:02:33.717000
+  displayName                              string               e.g. kakashi-pupushi
   downVotes                                int                  e.g. 0
-  lastAccessDate                           date                 e.g. 2016-01-29T11:13:50.240000
-  location                                 string               e.g. Berlin, Germany
-  reputation                               int                  e.g. 185
-  upVotes                                  int                  e.g. 4
-  userId                                   int                  e.g. 3470
-  views                                    int                  e.g. 111
-  websiteUrl                               string               e.g. http://www.northteq.com
+  lastAccessDate                           date                 e.g. 2024-03-19T05:54:13.313000
+  location                                 string               e.g. Turin, Italy
+  reputation                               int                  e.g. 11
+  upVotes                                  int                  e.g. 0
+  userId                                   int                  e.g. 1169604
+  views                                    int                  e.g. 0
+  websiteUrl                               string               e.g. 
 
-Collection: posts  (~20,000 documents)
+Collection: posts  (~75,849 documents)
 Fields:
-  acceptedAnswerId                         int                  e.g. 21909
-  answerCount                              int                  e.g. 6
-  body                                     string               e.g. <p>I am in a biological field (medicine) but I have genui...
-  closedDate                               date                 e.g. 2019-12-12T18:48:20.367000
-  commentCount                             int                  e.g. 4
+  acceptedAnswerId                         int                  e.g. 870376
+  answerCount                              int                  e.g. 2
+  body                                     string               e.g. <p>This question is old but I just came across it and I'd...
+  closedDate                               date                 e.g. 2016-05-01T00:00:58.857000
+  commentCount                             int                  e.g. 0
   comments                                 array<object>        e.g. (object)
-  comments[].commentId                     int                  e.g. 47522
-  comments[].creationDate                  date                 e.g. 2011-02-13T22:47:37.840000
-  comments[].score                         int                  e.g. 1
-  comments[].text                          string               e.g. You forgot analysis. Probability theory is in my opinion ...
-  comments[].userId                        int                  e.g. 1120
-  communityOwnedDate                       date                 e.g. 2010-08-05T17:58:54.490000
-  creationDate                             date                 e.g. 2011-02-13T22:43:47.557000
+  comments[].commentId                     int                  e.g. 10078003
+  comments[].creationDate                  date                 e.g. 2023-08-08T05:06:00.067000
+  comments[].score                         int                  e.g. 0
+  comments[].text                          string               e.g. Thank you so much for pointing out this. I was wondering ...
+  comments[].userId                        int                  e.g. 687924
+  creationDate                             date                 e.g. 2014-01-09T15:45:35.173000
   favoriteCount                            int                  e.g. 0
-  lastActivityDate                         date                 e.g. 2015-01-20T18:34:44.250000
-  lastEditDate                             date                 e.g. 2015-01-08T23:23:19.117000
-  lastEditorUserId                         int                  e.g. 68107
-  ownerUserId                              int                  e.g. 2556
-  parentId                                 int                  e.g. 11669
-  postId                                   int                  e.g. 21901
-  postTypeId                               int                  e.g. 1
+  lastActivityDate                         date                 e.g. 2014-01-09T15:45:35.173000
+  lastEditDate                             date                 e.g. 2014-10-13T16:53:35.003000
+  lastEditorUserId                         int                  e.g. 79762
+  ownerUserId                              int                  e.g. 104109
+  parentId                                 int                  e.g. 275325
+  postId                                   int                  e.g. 632686
+  postTypeId                               int                  e.g. 2
   relatedPosts                             array<object>        e.g. (object)
   relatedPosts[].linkTypeId                int                  e.g. 1
-  relatedPosts[].postId                    int                  e.g. 7743
-  score                                    int                  e.g. 14
-  tags                                     array<string>        e.g. |soft-question|advice|learning|
-  title                                    string               e.g. In what order should the following areas of mathematics b...
-  viewCount                                int                  e.g. 18700
+  relatedPosts[].postId                    int                  e.g. 3776
+  score                                    int                  e.g. 1
+  tags                                     array<string>        e.g. |algebra-precalculus|
+  title                                    string               e.g. at what interest rate can one double his initial deposit ...
+  viewCount                                int                  e.g. 0
 
-Collection: postHistory  (~20,000 documents)
+Collection: postHistory  (~231,763 documents)
 Fields:
-  comment                                  string               e.g. added 34 characters in body; added 6 characters in body; ...
-  creationDate                             date                 e.g. 2010-11-02T16:25:51.580000
-  postHistoryId                            int                  e.g. 22219
-  postHistoryTypeId                        int                  e.g. 1
-  postId                                   int                  e.g. 8658
-  revisionGUID                             string               e.g. 0281f3db-aefe-41f2-9556-957c39a4b0d4
-  text                                     string               e.g. f(x) = 1/cos x then f^n(x).
-  userDisplayName                          string               e.g. anonymous
-  userId                                   int                  e.g. 2563
+  comment                                  string               e.g. some Latex fixed
+  creationDate                             date                 e.g. 2014-02-26T12:12:25.630000
+  postHistoryId                            int                  e.g. 2042559
+  postHistoryTypeId                        int                  e.g. 2
+  postId                                   int                  e.g. 691132
+  revisionGUID                             string               e.g. 9f0ecdb4-ad95-4fe7-bcd4-93b7a439a262
+  text                                     string               e.g. Point 1.: You are right, that is an error, $e^w = \sum\li...
+  userDisplayName                          string               e.g. user142299
+  userId                                   int                  e.g. 83702
