@@ -7,7 +7,7 @@ from statistics import mean
 
 PYTHON = sys.executable
 PROJECT_ROOT = Path(__file__).resolve().parent
-SCRIPT_ROOT = PROJECT_ROOT  # if pipeline.py is inside JSONStorm/
+SCRIPT_ROOT = PROJECT_ROOT
 
 
 def run_step(name, cmd):
@@ -26,6 +26,7 @@ def main():
     sample_n   = int(params.get("SAMPLE_N", 50))
     sample_mode = params.get("SAMPLE_MODE", "nth")
     timeout_ms = int(params.get("TIMEOUT_MS", 5000))
+    prompt_choice = yanex.get_param("PROMPT", default="p1")
 
     print("YANEX PARAMS:", params)
 
@@ -72,8 +73,27 @@ def main():
         ],
     )
 
-    # Optional: Gemini query generation
-    # run_step("Generating queries", [PYTHON, "generate_queries.py"])
+    
+    # Reset queries file before generating
+    queries_file = SCRIPT_ROOT / "queries.jsonl"
+    queries_file.write_text("")
+
+    # -------------------------------
+    # Gemini query generation
+    # -------------------------------
+    
+    prompt_type = params.get("PROMPT", "P1")
+
+    run_step(
+        "Generating queries (Gemini)",
+        [
+            PYTHON,
+            "generate_queries.py",
+            "--prompt",
+            prompt_type
+        ]
+    )
+
 
     run_step(
         "Running benchmark harness",

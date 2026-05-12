@@ -1,4 +1,9 @@
-PROMPTS = {"default": "Generate MongoDB queries based on the following criteria:...",
-           "complex": "Given a complex dataset with multiple fields, generate MongoDB queries that filter, project, and sort the data according to specific conditions...",
-           "nested": "For a dataset with nested structures, generate MongoDB queries that can effectively filter and project data from nested fields..."
-           }
+PROMPTS = {
+    "p1": "Generate an interesting and elaborate MongoDB aggregation pipeline for performance benchmarking, potentially including constructs such as $lookup (joins), nested pipelines (subquery-like behavior), multi-stage transformations, $group, $setWindowFields, $facet, complex $match predicates, computed expressions, string manipulations, and handling of missing or null fields.",
+    "p2": "Generate an interesting and elaborate MongoDB query (preferably an aggregation pipeline) for performance benchmarking.",
+    "p3": "Generate a MongoDB query suitable for performance benchmarking.",
+    "p4": "Generate a simple MongoDB query for benchmarking, using basic constructs such as $match, $project, $sort, and $limit.",
+    "p5": "Generate an interesting and elaborate MongoDB aggregation pipeline for performance benchmarking, potentially including $lookup, nested pipelines, $group, $setWindowFields, $facet, complex expressions, string operations, and handling of null or missing fields. Incorporate obscure semantic corner cases, unusual operator combinations, edge cases in array handling, type inconsistencies, and non-obvious query behaviors.",
+    "p6": "Generate an interesting and elaborate MongoDB query for benchmarking string processing, using operators such as $regex, $concat, $substr, $toLower, $toUpper, $replaceAll, and text-based filtering or transformations.",
+    "p7": "Generate an interesting and elaborate MongoDB aggregation pipeline for performance benchmarking, potentially including $lookup, $graphLookup (recursive traversal), nested pipelines, $setWindowFields, $group, $facet, complex expressions, string processing, and handling of null or missing values. Aim to maximize structural and computational complexity."
+}
