@@ -2,8 +2,12 @@ import subprocess
 import sys
 import yanex
 from pathlib import Path
+import json
+from statistics import mean
 
 PYTHON = sys.executable
+PROJECT_ROOT = Path(__file__).resolve().parent
+SCRIPT_ROOT = PROJECT_ROOT  # if pipeline.py is inside JSONStorm/
 
 
 def run_step(name, cmd):
@@ -18,10 +22,14 @@ def main():
     # -------------------------------
     params = yanex.get_params()
 
-    db_name      = params.get("db", "mathstackexchange_dev")
-    sample_mode  = params.get("sample_mode", "nth")
-    sample_n     = params.get("sample_n", 50)
-    timeout_ms   = params.get("timeout_ms", 5000)
+    db_name      = params.get("DB", "mathstackexchange_dev")
+    sample_n   = int(params.get("SAMPLE_N", 50))
+    sample_mode = params.get("SAMPLE_MODE", "nth")
+    timeout_ms = int(params.get("TIMEOUT_MS", 5000))
+
+    print("YANEX PARAMS:", params)
+
+    print(f"[PIPELINE] Using sample_n={sample_n}, sample_mode={sample_mode}")
 
     # Paths
     data_dir     = Path("data")
@@ -85,11 +93,46 @@ def main():
     yanex.copy_artifact(queries_file, "queries.jsonl")
     yanex.copy_artifact(results_file, "results.jsonl")
 
-    # Optional: log a simple metric
-    yanex.log_metrics({
-        "sample_n": sample_n,
-        "timeout_ms": timeout_ms,
-    })
+    # -------------------------------
+    # Log metrics to Yanex
+    # -------------------------------
+
+    # yanex.log_metrics({
+    #     "sample_n": sample_n,
+    #     "timeout_ms": timeout_ms,
+    # })
+
+    results_path = SCRIPT_ROOT / "results" / "results.jsonl"
+    results = []
+    with open(results_path, "r", encoding="utf-8") as f:
+        for line in f:
+            results.append(json.loads(line))
+
+    successful = [r for r in results if r["status"] == "success"]
+    timeouts   = [r for r in results if r["status"] == "timeout"]
+    errors     = [r for r in results if r["status"] == "error"]
+
+    
+    metrics = {
+        # Query outcomes
+        "queries_total": len(results),
+        "queries_success": len(successful),
+        "queries_timeout": len(timeouts),
+        "queries_error": len(errors),
+    }
+
+    if successful:
+        metrics.update({
+            "avg_wall_time_ms": mean(r["wall_time_ms"] for r in successful),
+            "max_wall_time_ms": max(r["wall_time_ms"] for r in successful),
+            "avg_docs_examined": mean(r["totalDocsExamined"] for r in successful),
+            "avg_keys_examined": mean(r["totalKeysExamined"] for r in successful),
+        })
+    
+    yanex.log_metrics(metrics)
+    
+
+
 
     print("\nExperiment completed successfully")
 

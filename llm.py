@@ -1,5 +1,5 @@
 import yanex
-from prompts import PROMPTS
+from JSONStorm.pipeline.prompts import PROMPTS
 from time import sleep, perf_counter
 from random import random
 
