@@ -160,10 +160,10 @@ def main():
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--prompt", default="P1")
+    parser.add_argument("--num-queries", type=int, default=1)
     args = parser.parse_args()
 
     schema_text = load_schema()
-    qid = next_query_id()
 
     prompt_key = args.prompt.lower()
     if prompt_key not in PROMPTS:
@@ -171,19 +171,32 @@ def main():
 
     base_prompt = PROMPTS[prompt_key]
 
-    query = generate_query(schema_text, qid, base_prompt)
-
-    if query is None:
-        print("[ERROR] Failed to generate valid query")
-        return
+    num_queries = args.num_queries  # <-- passed from pipeline.py
+    generated = 0
+    attempted = 0
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_PATH.open("a", encoding="utf-8") as f:
-        
-        f.write(json.dumps(query) + "\n")
 
+    while generated < num_queries:
+        qid = next_query_id()
+        attempted += 1
 
-    print(f"[OK] Generated {query['id']}: {query['description']}")
+        query = generate_query(schema_text, qid, base_prompt)
+
+        if query is None:
+            print(f"[WARN] Generation failed (attempt {attempted}), skipping")
+            continue
+
+        # Defensive JSON validation
+        json.dumps(query)
+
+        with OUTPUT_PATH.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(query) + "\n")
+
+        generated += 1
+        print(f"[OK] Generated {query['id']} ({generated}/{num_queries})")
+
+    print(f"[DONE] Generated {generated} queries using prompt '{prompt_key}'")
 
 
 if __name__ == "__main__":

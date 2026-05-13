@@ -27,10 +27,12 @@ def main():
     sample_mode = params.get("SAMPLE_MODE", "nth")
     timeout_ms = int(params.get("TIMEOUT_MS", 5000))
     prompt_choice = yanex.get_param("PROMPT", default="p1")
+    num_queries = int(params.get("NUM_QUERIES", 1))
 
     print("YANEX PARAMS:", params)
 
     print(f"[PIPELINE] Using sample_n={sample_n}, sample_mode={sample_mode}")
+    print(f"[PIPELINE] num_queries={num_queries}, prompt={prompt_choice}")
 
     # Paths
     data_dir     = Path("data")
@@ -89,8 +91,8 @@ def main():
         [
             PYTHON,
             "generate_queries.py",
-            "--prompt",
-            prompt_type
+            "--prompt", prompt_type,
+            "--num-queries", str(num_queries),
         ]
     )
 

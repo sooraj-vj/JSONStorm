@@ -1,62 +1,62 @@
-Collection: users  (~1,000 documents)
+Collection: users  (~23,059 documents)
 Fields:
-  aboutMe                                  string               e.g. <p>Web Developer - currently specializing in Javascript -...
-  accountId                                int                  e.g. 37854
-  badges                                   array<object>        e.g. (object)
-  badges[].badgeId                         int                  e.g. 405588
-  badges[].class                           int                  e.g. 3
-  badges[].date                            date                 e.g. 2014-09-24T20:28:04.143000
-  badges[].name                            string               e.g. Autobiographer
-  creationDate                             date                 e.g. 2010-10-17T23:48:32.283000
-  displayName                              string               e.g. Sean Hogan
-  downVotes                                int                  e.g. 0
-  lastAccessDate                           date                 e.g. 2014-03-17T23:30:11.510000
-  location                                 string               e.g. Sydney, Australia
-  reputation                               int                  e.g. 101
-  upVotes                                  int                  e.g. 0
-  userId                                   int                  e.g. 2592
-  views                                    int                  e.g. 7
-  websiteUrl                               string               e.g. http://meekostuff.net
+  aboutMe                                  string               e.g. <p>Hungry for math</p>
 
-Collection: posts  (~1,000 documents)
+  accountId                                int                  e.g. 26271481
+  badges                                   array<object>        e.g. (object)
+  badges[].badgeId                         int                  e.g. 2154615
+  badges[].class                           int                  e.g. 3
+  badges[].date                            date                 e.g. 2022-09-07T13:25:20.833000
+  badges[].name                            string               e.g. Autobiographer
+  creationDate                             date                 e.g. 2022-09-07T13:16:37.613000
+  displayName                              string               e.g. Kit4283
+  downVotes                                int                  e.g. 0
+  lastAccessDate                           date                 e.g. 2022-09-08T03:36:04.583000
+  location                                 string               e.g. Canada
+  reputation                               int                  e.g. 1
+  upVotes                                  int                  e.g. 0
+  userId                                   int                  e.g. 1093291
+  views                                    int                  e.g. 0
+  websiteUrl                               string               e.g. https://mavs.work/cv
+
+Collection: posts  (~75,849 documents)
 Fields:
-  acceptedAnswerId                         int                  e.g. 105
-  answerCount                              int                  e.g. 2
-  body                                     string               e.g. <p>If you allow yourself a tiny bit of calculus ( "$\sin ...
-  closedDate                               date                 e.g. 2015-04-08T15:54:29.517000
-  commentCount                             int                  e.g. 2
+  acceptedAnswerId                         int                  e.g. 4468904
+  answerCount                              int                  e.g. 0
+  body                                     string               e.g. <p>Working in <a href="https://en.m.wikipedia.org/wiki/Ho...
+  closedDate                               date                 e.g. 2022-04-22T14:06:36.363000
+  commentCount                             int                  e.g. 0
   comments                                 array<object>        e.g. (object)
-  comments[].commentId                     int                  e.g. 1067834
-  comments[].creationDate                  date                 e.g. 2013-09-17T20:03:35.890000
-  comments[].score                         int                  e.g. 0
-  comments[].text                          string               e.g. Excellent answer. Could you expand on the combinatorics u...
-  comments[].userId                        int                  e.g. 39568
-  communityOwnedDate                       date                 e.g. 2010-07-28T06:53:43.987000
-  creationDate                             date                 e.g. 2010-07-29T03:25:59.173000
+  comments[].commentId                     int                  e.g. 9327263
+  comments[].creationDate                  date                 e.g. 2022-05-18T15:36:52.453000
+  comments[].score                         int                  e.g. 2
+  comments[].text                          string               e.g. I'll stick to the example you provided. Suppose $f:\mathb...
+  comments[].userId                        int                  e.g. 1041870
+  creationDate                             date                 e.g. 2019-09-28T07:08:26.430000
   favoriteCount                            int                  e.g. 0
-  lastActivityDate                         date                 e.g. 2010-08-03T16:23:35.267000
-  lastEditDate                             date                 e.g. 2017-03-09T14:46:49.787000
-  lastEditorUserId                         int                  e.g. -1
-  ownerUserId                              int                  e.g. 409
-  parentId                                 int                  e.g. 1048
-  postId                                   int                  e.g. 1103
+  lastActivityDate                         date                 e.g. 2019-09-28T07:08:26.430000
+  lastEditDate                             date                 e.g. 2022-05-27T05:06:16.263000
+  lastEditorUserId                         int                  e.g. 316409
+  ownerUserId                              int                  e.g. 265466
+  parentId                                 int                  e.g. 3371561
+  postId                                   int                  e.g. 3372861
   postTypeId                               int                  e.g. 2
   relatedPosts                             array<object>        e.g. (object)
   relatedPosts[].linkTypeId                int                  e.g. 1
-  relatedPosts[].postId                    int                  e.g. 201330
-  score                                    int                  e.g. 27
-  tags                                     array<string>        e.g. |arithmetic|project-euler|
-  title                                    string               e.g. Faulty logic when summing large integers?
+  relatedPosts[].postId                    int                  e.g. 2279851
+  score                                    int                  e.g. 0
+  tags                                     array<string>        e.g. |equivalence-relations|
+  title                                    string               e.g. Objects that change their equivalence class under some tr...
   viewCount                                int                  e.g. 0
 
-Collection: postHistory  (~1,000 documents)
+Collection: postHistory  (~231,763 documents)
 Fields:
-  comment                                  string               e.g. edited title; added 5 characters in body
-  creationDate                             date                 e.g. 2010-07-22T01:13:00.127000
-  postHistoryId                            int                  e.g. 967
+  comment                                  string               e.g. added 320 characters in body
+  creationDate                             date                 e.g. 2013-08-29T04:23:06.670000
+  postHistoryId                            int                  e.g. 1413533
   postHistoryTypeId                        int                  e.g. 2
-  postId                                   int                  e.g. 420
-  revisionGUID                             string               e.g. 0d881875-5b47-4487-9d3c-ac2f154dd493
-  text                                     string               e.g. The proof of the [Schroeder-Bernstein theorem][1] allows ...
-  userDisplayName                          string               e.g. user126
-  userId                                   int                  e.g. 536
+  postId                                   int                  e.g. 478746
+  revisionGUID                             string               e.g. 1a98f469-3513-45da-be78-eda7d06a2e7e
+  text                                     string               e.g. I am new to both here and real analysis. It would be quit...
+  userDisplayName                          string               e.g. user38268
+  userId                                   int                  e.g. 92135
