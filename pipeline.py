@@ -69,7 +69,7 @@ def main():
     run_step(
         "Inferring schema",
         [
-            PYTHON, "infer_schema.py",
+            PYTHON, "infer_schema_v2.py",
             "--db", db_name,
             "--out", str(schema_file),
         ],

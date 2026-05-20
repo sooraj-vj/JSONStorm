@@ -1,62 +1,76 @@
-Collection: users  (~23,059 documents)
-Fields:
-  aboutMe                                  string               e.g. <p>Hungry for math</p>
+// Collection: users  (~23,059 documents, 200 sampled)
+interface Users {
+  aboutMe?: string;                                     // 62% present | e.g. <p>It's all about the hat!</p>
+, , <p>I'm a nice guy, that like to share my knowledge…
+  accountId: int;                                       // 100% present | range 6,660 – 30,995,948
+  badges?: object[];                                    // 75% present | e.g. [{…}, …], [{…}]
+  creationDate: Date;                                   // 100% present | range 2010-09-27 – 2024-03-26
+  displayName: string;                                  // 100% present | e.g. Mrdlau, Carlos , A. Ramachary | high-cardinality
+  downVotes: int;                                       // 100% present | range 0 – 1,228
+  lastAccessDate: Date;                                 // 100% present | range 2011-05-26 – 2024-04-06
+  location?: string;                                    // 46% present | e.g. United States, Gothenburg, Sweden, Beijing, China | high-cardinality
+  reputation: int;                                      // 100% present | range 1 – 179,216
+  upVotes: int;                                         // 100% present | range 0 – 9,393
+  userId: int;                                          // 100% present | range 2,162 – 1,305,347
+  views: int;                                           // 100% present | range 0 – 51,334
+  websiteUrl?: string;                                  // 47% present | e.g. http://stackoverflow.com, http://puggan.se/, https://projecteuler.net/profile/tec.png
 
-  accountId                                int                  e.g. 26271481
-  badges                                   array<object>        e.g. (object)
-  badges[].badgeId                         int                  e.g. 2154615
-  badges[].class                           int                  e.g. 3
-  badges[].date                            date                 e.g. 2022-09-07T13:25:20.833000
-  badges[].name                            string               e.g. Autobiographer
-  creationDate                             date                 e.g. 2022-09-07T13:16:37.613000
-  displayName                              string               e.g. Kit4283
-  downVotes                                int                  e.g. 0
-  lastAccessDate                           date                 e.g. 2022-09-08T03:36:04.583000
-  location                                 string               e.g. Canada
-  reputation                               int                  e.g. 1
-  upVotes                                  int                  e.g. 0
-  userId                                   int                  e.g. 1093291
-  views                                    int                  e.g. 0
-  websiteUrl                               string               e.g. https://mavs.work/cv
+  // --- Nested field paths (use dot-notation in queries) ---
 
-Collection: posts  (~75,849 documents)
-Fields:
-  acceptedAnswerId                         int                  e.g. 4468904
-  answerCount                              int                  e.g. 0
-  body                                     string               e.g. <p>Working in <a href="https://en.m.wikipedia.org/wiki/Ho...
-  closedDate                               date                 e.g. 2022-04-22T14:06:36.363000
-  commentCount                             int                  e.g. 0
-  comments                                 array<object>        e.g. (object)
-  comments[].commentId                     int                  e.g. 9327263
-  comments[].creationDate                  date                 e.g. 2022-05-18T15:36:52.453000
-  comments[].score                         int                  e.g. 2
-  comments[].text                          string               e.g. I'll stick to the example you provided. Suppose $f:\mathb...
-  comments[].userId                        int                  e.g. 1041870
-  creationDate                             date                 e.g. 2019-09-28T07:08:26.430000
-  favoriteCount                            int                  e.g. 0
-  lastActivityDate                         date                 e.g. 2019-09-28T07:08:26.430000
-  lastEditDate                             date                 e.g. 2022-05-27T05:06:16.263000
-  lastEditorUserId                         int                  e.g. 316409
-  ownerUserId                              int                  e.g. 265466
-  parentId                                 int                  e.g. 3371561
-  postId                                   int                  e.g. 3372861
-  postTypeId                               int                  e.g. 2
-  relatedPosts                             array<object>        e.g. (object)
-  relatedPosts[].linkTypeId                int                  e.g. 1
-  relatedPosts[].postId                    int                  e.g. 2279851
-  score                                    int                  e.g. 0
-  tags                                     array<string>        e.g. |equivalence-relations|
-  title                                    string               e.g. Objects that change their equivalence class under some tr...
-  viewCount                                int                  e.g. 0
+  badges[].badgeId: int;                                // 698% present | range 5,593 – 2,423,654
+  badges[].class: int;                                  // 698% present | range 1 – 3
+  badges[].date: Date;                                  // 698% present | range 2010-09-27 – 2024-03-31
+  badges[].name: string;                                // 698% present | e.g. Tumbleweed, Informed, Teacher
+}
 
-Collection: postHistory  (~231,763 documents)
-Fields:
-  comment                                  string               e.g. added 320 characters in body
-  creationDate                             date                 e.g. 2013-08-29T04:23:06.670000
-  postHistoryId                            int                  e.g. 1413533
-  postHistoryTypeId                        int                  e.g. 2
-  postId                                   int                  e.g. 478746
-  revisionGUID                             string               e.g. 1a98f469-3513-45da-be78-eda7d06a2e7e
-  text                                     string               e.g. I am new to both here and real analysis. It would be quit...
-  userDisplayName                          string               e.g. user38268
-  userId                                   int                  e.g. 92135
+// Collection: posts  (~75,849 documents, 200 sampled)
+interface Posts {
+  acceptedAnswerId?: int;                               // 50% present | range 48,853 – 4,876,314
+  answerCount?: int;                                    // 72% present | range 0 – 6
+  body: string;                                         // 100% present | e.g. <p>I need to prove a lemma. I have reduced the pro…, <p>I just have been studying real analysis from St…, <p>Suppose I have an equation</p>
+<p><span class="… | high-cardinality
+  closedDate?: Date;                                    // 10% present | range 2014-08-01 – 2024-03-19
+  commentCount: int;                                    // 100% present | range 0 – 17
+  comments?: object[];                                  // 74% present | e.g. [{…}, …], [{…}]
+  communityOwnedDate?: Date;                            // 1% present | range 2012-08-05 – 2013-06-18
+  creationDate: Date;                                   // 100% present | range 2011-02-01 – 2024-03-18
+  favoriteCount?: int;                                  // 4% present | e.g. 0
+  lastActivityDate: Date;                               // 100% present | range 2011-02-02 – 2024-03-18
+  lastEditDate?: Date;                                  // 73% present | range 2011-02-02 – 2024-03-18
+  lastEditorUserId?: int;                               // 72% present | range -1 – 1,302,420
+  ownerUserId?: int;                                    // 98% present | range 237 – 1,302,420
+  parentId?: int;                                       // 27% present | range 18,405 – 4,336,317
+  postId: int;                                          // 100% present | range 19,794 – 4,882,973
+  postTypeId: int;                                      // 100% present | range 1 – 5
+  relatedPosts?: object[];                              // 22% present | e.g. [{…}], [{…}, …]
+  score: int;                                           // 100% present | range -4 – 40
+  tags?: string[];                                      // 72% present | e.g. [|modular-arithmetic|], [|real-analysis|measure-theory|], [|integration|probability-distributions|normal-dist…]
+  title?: string;                                       // 72% present | e.g. simple looking congruence problem, Some problem of the proof about measure theory., Definite Integral of Q function times Gaussian dis… | high-cardinality
+  viewCount: int;                                       // 100% present | range 0 – 29,383
+
+  // --- Nested field paths (use dot-notation in queries) ---
+
+  comments[].commentId: int;                            // 292% present | range 43,291 – 10,414,948
+  comments[].creationDate: Date;                        // 292% present | range 2011-02-01 – 2024-03-18
+  comments[].score: int;                                // 292% present | range 0 – 11
+  comments[].text: string;                              // 292% present | e.g. simple ? then to it your self, Note that $a+b=2q+p+1$ is an integer, so $a$ integ…, @Kelenner put that in an answer so I can upvote it… | high-cardinality
+  comments[].userId: int;                               // 285% present | range 242 – 1,300,886
+
+  relatedPosts[].linkTypeId?: int;                      // 40% present | range 1 – 3
+  relatedPosts[].postId?: int;                          // 40% present | range 155 – 3,688,059
+}
+
+// Collection: postHistory  (~231,763 documents, 200 sampled)
+interface Posthistory {
+  comment?: string;                                     // 68% present | e.g. edited body; edited tags, Rollback to [39af10c0-3291-41fe-bd79-08ab7f7a1936], Proposed by 346773 approved by 438089, 28816 edit …
+  creationDate: Date;                                   // 100% present | range 2010-11-17 – 2024-03-27
+  postHistoryId: int;                                   // 100% present | range 27,473 – 16,919,314
+  postHistoryTypeId: int;                               // 100% present | range 1 – 34
+  postId: int;                                          // 100% present | range 10,710 – 4,885,975
+  revisionGUID: string;                                 // 100% present | e.g. 08e27c3d-c196-4bf6-827c-ef2588df77cc, 8aa4e685-d057-4d96-a87c-a9973c7b600f, e8201f35-03ed-4088-8c32-a535bed77bf5 | high-cardinality
+  text?: string;                                        // 96% present | e.g. |multivariable-calculus|multiple-integral|, |reference-request|online-resources|, Repeating the question
+
+> Why $P(A)\cdot P(B \mi… | high-cardinality
+  userDisplayName?: string;                             // 5% present | e.g. user644428, user61527, user607131
+  userId?: int;                                         // 92% present | range -1 – 1,276,436
+}
