@@ -1,76 +1,81 @@
-// Collection: users  (~23,059 documents, 200 sampled)
+// Collection: users  (~23,059 documents, 197 sampled)
 interface Users {
-  aboutMe?: string;                                     // 62% present | e.g. <p>It's all about the hat!</p>
-, , <p>I'm a nice guy, that like to share my knowledge…
-  accountId: int;                                       // 100% present | range 6,660 – 30,995,948
+  aboutMe?: string;                                     // 61% present | e.g. , <p>I am a DevOps Engineer (System Engineer) who st…, <p>N/A</p>
+
+  accountId: int;                                       // 100% present | range 1,444 – 30,683,307
   badges?: object[];                                    // 75% present | e.g. [{…}, …], [{…}]
-  creationDate: Date;                                   // 100% present | range 2010-09-27 – 2024-03-26
-  displayName: string;                                  // 100% present | e.g. Mrdlau, Carlos , A. Ramachary | high-cardinality
-  downVotes: int;                                       // 100% present | range 0 – 1,228
-  lastAccessDate: Date;                                 // 100% present | range 2011-05-26 – 2024-04-06
-  location?: string;                                    // 46% present | e.g. United States, Gothenburg, Sweden, Beijing, China | high-cardinality
-  reputation: int;                                      // 100% present | range 1 – 179,216
-  upVotes: int;                                         // 100% present | range 0 – 9,393
-  userId: int;                                          // 100% present | range 2,162 – 1,305,347
-  views: int;                                           // 100% present | range 0 – 51,334
-  websiteUrl?: string;                                  // 47% present | e.g. http://stackoverflow.com, http://puggan.se/, https://projecteuler.net/profile/tec.png
+  creationDate: Date;                                   // 100% present | range 2010-08-23 – 2024-03-04
+  displayName: string;                                  // 100% present | e.g. JAGO, utexas, daisies | high-cardinality
+  downVotes: int;                                       // 100% present | range 0 – 134
+  lastAccessDate: Date;                                 // 100% present | range 2010-12-15 – 2024-04-06
+  location?: string;                                    // 59% present | e.g. Cologne, Germany, Italy, Australia
+  reputation: int;                                      // 100% present | range 1 – 15,390
+  upVotes: int;                                         // 100% present | range 0 – 2,831
+  userId: int;                                          // 100% present | range 1,434 – 1,297,418
+  views: int;                                           // 100% present | range 0 – 4,303
+  websiteUrl?: string;                                  // 51% present | e.g. , https://payamohajeri.me/, http://N/A
 
   // --- Nested field paths (use dot-notation in queries) ---
 
-  badges[].badgeId: int;                                // 698% present | range 5,593 – 2,423,654
-  badges[].class: int;                                  // 698% present | range 1 – 3
-  badges[].date: Date;                                  // 698% present | range 2010-09-27 – 2024-03-31
-  badges[].name: string;                                // 698% present | e.g. Tumbleweed, Informed, Teacher
+  badges[].badgeId: int;                                // 474% present | range 2,697 – 2,424,296
+  badges[].class: int;                                  // 474% present | range 1 – 3
+  badges[].date: Date;                                  // 474% present | range 2010-08-23 – 2024-03-31
+  badges[].name: string;                                // 474% present | e.g. Teacher, Editor, Supporter
 }
 
 // Collection: posts  (~75,849 documents, 200 sampled)
 interface Posts {
-  acceptedAnswerId?: int;                               // 50% present | range 48,853 – 4,876,314
-  answerCount?: int;                                    // 72% present | range 0 – 6
-  body: string;                                         // 100% present | e.g. <p>I need to prove a lemma. I have reduced the pro…, <p>I just have been studying real analysis from St…, <p>Suppose I have an equation</p>
-<p><span class="… | high-cardinality
-  closedDate?: Date;                                    // 10% present | range 2014-08-01 – 2024-03-19
-  commentCount: int;                                    // 100% present | range 0 – 17
-  comments?: object[];                                  // 74% present | e.g. [{…}, …], [{…}]
-  communityOwnedDate?: Date;                            // 1% present | range 2012-08-05 – 2013-06-18
-  creationDate: Date;                                   // 100% present | range 2011-02-01 – 2024-03-18
-  favoriteCount?: int;                                  // 4% present | e.g. 0
-  lastActivityDate: Date;                               // 100% present | range 2011-02-02 – 2024-03-18
-  lastEditDate?: Date;                                  // 73% present | range 2011-02-02 – 2024-03-18
-  lastEditorUserId?: int;                               // 72% present | range -1 – 1,302,420
-  ownerUserId?: int;                                    // 98% present | range 237 – 1,302,420
-  parentId?: int;                                       // 27% present | range 18,405 – 4,336,317
-  postId: int;                                          // 100% present | range 19,794 – 4,882,973
-  postTypeId: int;                                      // 100% present | range 1 – 5
-  relatedPosts?: object[];                              // 22% present | e.g. [{…}], [{…}, …]
-  score: int;                                           // 100% present | range -4 – 40
-  tags?: string[];                                      // 72% present | e.g. [|modular-arithmetic|], [|real-analysis|measure-theory|], [|integration|probability-distributions|normal-dist…]
-  title?: string;                                       // 72% present | e.g. simple looking congruence problem, Some problem of the proof about measure theory., Definite Integral of Q function times Gaussian dis… | high-cardinality
-  viewCount: int;                                       // 100% present | range 0 – 29,383
+  acceptedAnswerId?: int;                               // 52% present | range 88,842 – 4,771,718
+  answerCount?: int;                                    // 75% present | range 0 – 11
+  body: string;                                         // 100% present | e.g. <p>Given:</p>
+
+<p>$$
+x = y^d
+$$</p>
+
+<p>How do I e…, <p>“At least” means non-strict inequality (<span c…, <blockquote>
+<p>We can simplify this multiple sum … | high-cardinality
+  closedDate?: Date;                                    // 10% present | range 2016-04-01 – 2023-09-29
+  commentCount: int;                                    // 100% present | range 0 – 22
+  comments?: object[];                                  // 76% present | e.g. [{…}, …], [{…}]
+  creationDate: Date;                                   // 100% present | range 2011-06-14 – 2023-11-13
+  favoriteCount?: int;                                  // 5% present | e.g. 0
+  lastActivityDate: Date;                               // 100% present | range 2011-06-14 – 2024-03-18
+  lastEditDate?: Date;                                  // 74% present | range 2012-03-26 – 2024-03-18
+  lastEditorUserId?: int;                               // 73% present | range -1 – 1,143,866
+  ownerUserId?: int;                                    // 96% present | range 205 – 1,251,305
+  parentId?: int;                                       // 25% present | range 14,645 – 4,743,263
+  postId: int;                                          // 100% present | range 45,361 – 4,806,090
+  postTypeId: int;                                      // 100% present | range 1 – 2
+  relatedPosts?: object[];                              // 29% present | e.g. [{…}], [{…}, …]
+  score: int;                                           // 100% present | range -3 – 67
+  tags?: string[];                                      // 75% present | e.g. [|algebra-precalculus|], [|derivatives|], [|combinatorics|]
+  title?: string;                                       // 75% present | e.g. Where $x=y^d$ how do I express $d$?, Verify a solution - Chain Rule, Random Walk Problem in real axis | high-cardinality
+  viewCount: int;                                       // 100% present | range 0 – 122,271
 
   // --- Nested field paths (use dot-notation in queries) ---
 
-  comments[].commentId: int;                            // 292% present | range 43,291 – 10,414,948
-  comments[].creationDate: Date;                        // 292% present | range 2011-02-01 – 2024-03-18
-  comments[].score: int;                                // 292% present | range 0 – 11
-  comments[].text: string;                              // 292% present | e.g. simple ? then to it your self, Note that $a+b=2q+p+1$ is an integer, so $a$ integ…, @Kelenner put that in an answer so I can upvote it… | high-cardinality
-  comments[].userId: int;                               // 285% present | range 242 – 1,300,886
+  comments[].commentId: int;                            // 322% present | range 209,133 – 10,222,968
+  comments[].creationDate: Date;                        // 322% present | range 2011-12-06 – 2023-11-13
+  comments[].score: int;                                // 322% present | range 0 – 11
+  comments[].text: string;                              // 322% present | e.g. It's simply $d= \log_y x$, Well, $y$ is the $d$ root of $x$., How do we know "The number of ordered -tuples is g… | high-cardinality
+  comments[].userId: int;                               // 314% present | range 205 – 1,213,036
 
-  relatedPosts[].linkTypeId?: int;                      // 40% present | range 1 – 3
-  relatedPosts[].postId?: int;                          // 40% present | range 155 – 3,688,059
+  relatedPosts[].linkTypeId?: int;                      // 45% present | range 1 – 3
+  relatedPosts[].postId?: int;                          // 45% present | range 6,653 – 4,653,361
 }
 
 // Collection: postHistory  (~231,763 documents, 200 sampled)
 interface Posthistory {
-  comment?: string;                                     // 68% present | e.g. edited body; edited tags, Rollback to [39af10c0-3291-41fe-bd79-08ab7f7a1936], Proposed by 346773 approved by 438089, 28816 edit …
-  creationDate: Date;                                   // 100% present | range 2010-11-17 – 2024-03-27
-  postHistoryId: int;                                   // 100% present | range 27,473 – 16,919,314
-  postHistoryTypeId: int;                               // 100% present | range 1 – 34
-  postId: int;                                          // 100% present | range 10,710 – 4,885,975
-  revisionGUID: string;                                 // 100% present | e.g. 08e27c3d-c196-4bf6-827c-ef2588df77cc, 8aa4e685-d057-4d96-a87c-a9973c7b600f, e8201f35-03ed-4088-8c32-a535bed77bf5 | high-cardinality
-  text?: string;                                        // 96% present | e.g. |multivariable-calculus|multiple-integral|, |reference-request|online-resources|, Repeating the question
+  comment?: string;                                     // 64% present | e.g. edited body, http://twitter.com/#!/StackMath/status/38927434663…, oops, undo the previous edit 
+  creationDate: Date;                                   // 100% present | range 2010-10-05 – 2023-10-23
+  postHistoryId: int;                                   // 100% present | range 15,782 – 16,440,972
+  postHistoryTypeId: int;                               // 100% present | range 1 – 50
+  postId: int;                                          // 100% present | range 6,142 – 4,792,152
+  revisionGUID: string;                                 // 100% present | e.g. b51c682c-63d1-4317-bd76-9ab07d4de921, 14e393e1-6297-4da5-94a1-d14c6adb5ed3, 61fbdd6c-4c8b-4e9a-8473-21176ee7dbde | high-cardinality
+  text?: string;                                        // 97% present | e.g. Part a) looks good.
 
-> Why $P(A)\cdot P(B \mi… | high-cardinality
-  userDisplayName?: string;                             // 5% present | e.g. user644428, user61527, user607131
-  userId?: int;                                         // 92% present | range -1 – 1,276,436
+For part b), just draw the …, > What is the millionth decimal digit of the $10^{…, |recurrence-relations|functional-equations| | high-cardinality
+  userDisplayName?: string;                             // 4% present | values: "user17762", "user26857", "user318854", "user38268", "user65203", "user66906", "user887071"
+  userId?: int;                                         // 94% present | range -1 – 1,173,806
 }

@@ -25,9 +25,10 @@ def main():
     db_name      = params.get("DB", "mathstackexchange_dev")
     sample_n   = int(params.get("SAMPLE_N", 50))
     sample_mode = params.get("SAMPLE_MODE", "nth")
-    timeout_ms = int(params.get("TIMEOUT_MS", 5000))
-    prompt_choice = yanex.get_param("PROMPT", default="p1")
+    timeout_ms = int(params.get("TIMEOUT_MS", 20000))
+    prompt_choice = yanex.get_param("PROMPT", default="p3")
     num_queries = int(params.get("NUM_QUERIES", 1))
+    query_type = params.get("QUERY_TYPE", "find")
 
     print("YANEX PARAMS:", params)
 
@@ -38,61 +39,61 @@ def main():
     data_dir     = Path("data")
     sample_dir   = Path("sample_data")
     schema_file  = Path("schema.txt")
-    queries_file = Path("queries.jsonl")
+    queries_file = Path("queries-2.jsonl")
     results_file = Path("results/results.jsonl")
 
     # -------------------------------
     # Pipeline steps
     # -------------------------------
 
-    run_step(
-        "Sampling data",
-        [
-            PYTHON, "sample_data.py",
-            "--data-dir", str(data_dir),
-            "--out-dir", str(sample_dir),
-            "--mode", sample_mode,
-            "--n", str(sample_n),
-        ],
-    )
+    # run_step(
+    #     "Sampling data",
+    #     [
+    #         PYTHON, "sample_data.py",
+    #         "--data-dir", str(data_dir),
+    #         "--out-dir", str(sample_dir),
+    #         "--mode", sample_mode,
+    #         "--n", str(sample_n),
+    #     ],
+    # )
 
-    run_step(
-        "Importing data into MongoDB",
-        [
-            PYTHON, "import_data.py",
-            "--data-dir", str(sample_dir),
-            "--db", db_name,
-            "--drop",
-        ],
-    )
+    # run_step(
+    #     "Importing data into MongoDB",
+    #     [
+    #         PYTHON, "import_data.py",
+    #         "--data-dir", str(sample_dir),
+    #         "--db", db_name,
+    #         "--drop",
+    #     ],
+    # )
 
-    run_step(
-        "Inferring schema",
-        [
-            PYTHON, "infer_schema_v2.py",
-            "--db", db_name,
-            "--out", str(schema_file),
-        ],
-    )
+    # run_step(
+    #     "Inferring schema",
+    #     [
+    #         PYTHON, "infer_schema_v2.py",
+    #         "--db", db_name,
+    #         "--out", str(schema_file),
+    #     ],
+    # )
 
     
     # Reset queries file before generating
     queries_file = SCRIPT_ROOT / "queries.jsonl"
-    queries_file.write_text("")
+    # failed_results_file = SCRIPT_ROOT / "failed_results.jsonl"
+    # queries_file.write_text("")
 
     # -------------------------------
-    # Gemini query generation
+    # Query generation
     # -------------------------------
-    
-    prompt_type = params.get("PROMPT", "P1")
 
     run_step(
         "Generating queries (Gemini)",
         [
             PYTHON,
             "generate_queries.py",
-            "--prompt", prompt_type,
+            "--prompt", prompt_choice,
             "--num-queries", str(num_queries),
+            "--query-type", query_type
         ]
     )
 
@@ -104,6 +105,7 @@ def main():
             "--queries", str(queries_file),
             "--db", db_name,
             "--out", str(results_file),
+            # "--failed-queries-out", str(failed_results_file),
             "--timeout", str(timeout_ms),
         ],
     )
@@ -114,15 +116,16 @@ def main():
     yanex.copy_artifact(schema_file, "schema.txt")
     yanex.copy_artifact(queries_file, "queries.jsonl")
     yanex.copy_artifact(results_file, "results.jsonl")
+    # yanex.copy_artifact(failed_results_file, "failed_results.jsonl")
 
     # -------------------------------
     # Log metrics to Yanex
     # -------------------------------
 
-    # yanex.log_metrics({
-    #     "sample_n": sample_n,
-    #     "timeout_ms": timeout_ms,
-    # })
+    yanex.log_metrics({
+        "sample_n": sample_n,
+        "timeout_ms": timeout_ms,
+    })
 
     results_path = SCRIPT_ROOT / "results" / "results.jsonl"
     results = []
@@ -152,7 +155,9 @@ def main():
         })
     
     yanex.log_metrics(metrics)
-    
+    yanex.log_metrics({"query_type": query_type})
+    yanex.log_metrics({"prompt_choice": prompt_choice})
+
 
 
 

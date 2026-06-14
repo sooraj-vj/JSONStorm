@@ -45,8 +45,10 @@ def infer_type(value):
 
 def infer_array_type(lst):
     """
-    Sample up to 10 elements to determine the array's element type.
-    Returns e.g. "string[]", "object[]", "(string | int)[]" for heterogeneous arrays.
+Called when a field's value is a list.
+Samples up to 10 elements, collects all their types,
+and returns a type annotation like string[], object[], or (string | int)[] for mixed arrays.
+If the list is empty it returns unknown[] since there's no information to work with.
     """
     if not lst:
         return "unknown[]"
@@ -107,6 +109,8 @@ class FieldStats:
                 self.str_capped = True
 
     def presence(self, total_docs):
+        """Returns what fraction of sampled documents contained this field.
+        A field present in 130 out of 200 sampled docs returns 0.65"""
         return self.count / total_docs if total_docs else 0
 
     def type_str(self):
@@ -122,8 +126,11 @@ class FieldStats:
 
     def cardinality_hint(self):
         """
-        Returns a cardinality label based on observed string uniqueness.
-        Only meaningful for string fields with enough samples.
+        Looks at the ratio of unique string values to total observations
+        and returns "high-cardinality" if over 90% of values were distinct,
+        "categorical" if under 5% were distinct,
+        or None if there's not enough data or the field isn't a string.
+        This tells the LLM whether to use equality filters or range queries on this field.
         """
         if "string" not in self.types or self.count < 10:
             return None

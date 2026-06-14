@@ -17,6 +17,7 @@ What gets tracked in yanex:
     Artifacts:
         results JSONL (full raw output)
         queries JSONL (the query definitions that were run)
+        queries_failed JSONL (query definitions that failed or timed out)
         schema.txt (the schema used to generate the queries, if present)
 """
 
@@ -52,7 +53,6 @@ def make_json_safe(obj):
         return {k: make_json_safe(v) for k, v in obj.items()}
     if isinstance(obj, list):
         return [make_json_safe(v) for v in obj]
-    # ObjectId and other BSON types all have a usable __str__
     type_name = type(obj).__name__
     if type_name in ("ObjectId", "Decimal128", "Binary", "Code"):
         return str(obj)
@@ -85,47 +85,39 @@ def walk_execution_stages(stage: dict, depth: int = 0) -> dict:
     counts, expression depth, memory, etc.
     """
     f = {
-        # Operator counts (analogous to SQLStorm Table 6)
-        "n_collscan":       0,
-        "n_ixscan":         0,
-        "n_fetch":          0,
-        "n_lookup":         0,
-        "n_unwind":         0,
-        "n_group":          0,
-        "n_sort":           0,
-        "n_window":         0,
-        "n_facet":          0,
-        "n_graphlookup":    0,
-        "n_union":          0,
-        "n_project":        0,
-        "n_addfields":      0,
-        "n_match":          0,
-        "n_limit":          0,
-        "n_skip":           0,
-        # Structural metrics
-        "total_operators":  0,
-        "max_depth":        depth,
-        "pipeline_stages":  [],          # ordered list of stage names
-        # Predicate complexity
-        "n_predicates":     0,           # $match filter conditions counted recursively
-        "n_or_clauses":     0,
-        "n_and_clauses":    0,
-        "n_regex_predicates": 0,
-        "n_expr_predicates":  0,         # $expr inside $match
-        "n_elemMatch":      0,
-        # Projection / field computation
-        "n_projected_fields":  0,
-        "n_computed_fields":   0,        # $addFields / $project with expressions
-        # Join complexity
-        "n_lookup_pipelines":  0,        # nested pipelines inside $lookup
-        "n_lookup_conditions": 0,        # let + $expr conditions in $lookup
-        # Sort / window complexity
-        "n_sort_keys":      0,
-        "n_window_functions": 0,         # output fields inside $setWindowFields
-        "n_window_partitions": 0,
-        # Facet complexity
-        "n_facet_branches": 0,
-        # Cost metrics
+        "n_collscan":           0,
+        "n_ixscan":             0,
+        "n_fetch":              0,
+        "n_lookup":             0,
+        "n_unwind":             0,
+        "n_group":              0,
+        "n_sort":               0,
+        "n_window":             0,
+        "n_facet":              0,
+        "n_graphlookup":        0,
+        "n_union":              0,
+        "n_project":            0,
+        "n_addfields":          0,
+        "n_match":              0,
+        "n_limit":              0,
+        "n_skip":               0,
+        "total_operators":      0,
+        "max_depth":            depth,
+        "pipeline_stages":      [],
+        "n_predicates":         0,
+        "n_or_clauses":         0,
+        "n_and_clauses":        0,
+        "n_regex_predicates":   0,
+        "n_expr_predicates":    0,
+        "n_elemMatch":          0,
+        "n_projected_fields":   0,
+        "n_computed_fields":    0,
+        "n_lookup_pipelines":   0,
+        "n_lookup_conditions":  0,
+        "n_sort_keys":          0,
+        "n_window_functions":   0,
+        "n_window_partitions":  0,
+        "n_facet_branches":     0,
         "total_docs_examined":  0,
         "total_keys_examined":  0,
         "max_memory_bytes":     0,
@@ -137,78 +129,68 @@ def walk_execution_stages(stage: dict, depth: int = 0) -> dict:
     f["pipeline_stages"].append(stage_name)
     f["total_operators"] += 1
 
-    # ----- Operator type counters -----
     operator_map = {
-        "COLLSCAN":          "n_collscan",
-        "IXSCAN":            "n_ixscan",
-        "IDHACK":            "n_ixscan",
-        "FETCH":             "n_fetch",
-        "EQ_LOOKUP":         "n_lookup",
-        "$LOOKUP":           "n_lookup",
-        "$UNWIND":           "n_unwind",
-        "$GROUP":            "n_group",
-        "SORT":              "n_sort",
-        "$SORT":             "n_sort",
-        "$SETWINDOWFIELDS":  "n_window",
-        "$FACET":            "n_facet",
-        "$GRAPHLOOKUP":      "n_graphlookup",
-        "$UNIONWITH":        "n_union",
-        "PROJECTION":        "n_project",
-        "$PROJECT":          "n_project",
-        "$ADDFIELDS":        "n_addfields",
-        "$MATCH":            "n_match",
-        "MATCH":             "n_match",
-        "$LIMIT":            "n_limit",
-        "LIMIT":             "n_limit",
-        "$SKIP":             "n_skip",
-        "SKIP":              "n_skip",
+        "COLLSCAN":         "n_collscan",
+        "IXSCAN":           "n_ixscan",
+        "IDHACK":           "n_ixscan",
+        "FETCH":            "n_fetch",
+        "EQ_LOOKUP":        "n_lookup",
+        "$LOOKUP":          "n_lookup",
+        "$UNWIND":          "n_unwind",
+        "$GROUP":           "n_group",
+        "SORT":             "n_sort",
+        "$SORT":            "n_sort",
+        "$SETWINDOWFIELDS": "n_window",
+        "$FACET":           "n_facet",
+        "$GRAPHLOOKUP":     "n_graphlookup",
+        "$UNIONWITH":       "n_union",
+        "PROJECTION":       "n_project",
+        "$PROJECT":         "n_project",
+        "$ADDFIELDS":       "n_addfields",
+        "$MATCH":           "n_match",
+        "MATCH":            "n_match",
+        "$LIMIT":           "n_limit",
+        "LIMIT":            "n_limit",
+        "$SKIP":            "n_skip",
+        "SKIP":             "n_skip",
     }
     for marker, field in operator_map.items():
         if marker in stage_name:
             f[field] += 1
 
-    # ----- Predicate complexity ($match filter) -----
     for filter_key in ("filter", "query"):
         if filter_key in stage:
             _count_predicates(stage[filter_key], f)
 
-    # ----- Sort key count -----
-    if "n_sort" in stage_name or "SORT" in stage_name:
+    if "SORT" in stage_name:
         sort_pattern = stage.get("sortPattern", {})
         f["n_sort_keys"] += len(sort_pattern) if isinstance(sort_pattern, dict) else 0
 
-    # ----- $setWindowFields detail -----
-    if "$SETWINDOW" in stage_name or "SETWINDOW" in stage_name:
+    if "SETWINDOW" in stage_name:
         output = stage.get("output", {})
         f["n_window_functions"] += len(output) if isinstance(output, dict) else 0
         if stage.get("partitionBy") is not None:
             f["n_window_partitions"] += 1
 
-    # ----- $facet branch count -----
-    if "$FACET" in stage_name:
+    if "FACET" in stage_name:
         facet_doc = stage.get("facets", stage.get("$facet", {}))
         if isinstance(facet_doc, dict):
             f["n_facet_branches"] += len(facet_doc)
 
-    # ----- $lookup pipeline / condition count -----
     if "LOOKUP" in stage_name:
         if "pipeline" in stage:
             f["n_lookup_pipelines"] += 1
         if "let" in stage:
             f["n_lookup_conditions"] += len(stage.get("let", {}))
 
-    # ----- $project / $addFields field counts -----
     if "PROJECT" in stage_name or "ADDFIELDS" in stage_name:
         spec = stage.get("transformBy", stage.get("fields", {}))
         if isinstance(spec, dict):
-            f["n_projected_fields"]  += len(spec)
-            # A field is "computed" if its value is a dict (expression) not 0/1
-            f["n_computed_fields"] += sum(
-                1 for v in spec.values()
-                if isinstance(v, dict)
+            f["n_projected_fields"] += len(spec)
+            f["n_computed_fields"]  += sum(
+                1 for v in spec.values() if isinstance(v, dict)
             )
 
-    # ----- Cost metrics -----
     f["total_docs_examined"] += stage.get("docsExamined", 0)
     f["total_keys_examined"] += stage.get("keysExamined", 0)
     f["max_memory_bytes"] = max(
@@ -218,7 +200,6 @@ def walk_execution_stages(stage: dict, depth: int = 0) -> dict:
         stage.get("spilledDataStorageSize", 0),
     )
 
-    # ----- Recurse into children -----
     children = []
     if "inputStage" in stage:
         children = [stage["inputStage"]]
@@ -233,15 +214,15 @@ def walk_execution_stages(stage: dict, depth: int = 0) -> dict:
         if not isinstance(child, dict):
             continue
         child_f = walk_execution_stages(child, depth + 1)
-        # Merge numeric fields
         for key in f:
             if key == "pipeline_stages":
                 f["pipeline_stages"] += child_f["pipeline_stages"]
             elif key == "max_depth":
                 f["max_depth"] = max(f["max_depth"], child_f["max_depth"])
             elif key == "max_memory_bytes":
-                f["max_memory_bytes"] = max(f["max_memory_bytes"],
-                                            child_f["max_memory_bytes"])
+                f["max_memory_bytes"] = max(
+                    f["max_memory_bytes"], child_f["max_memory_bytes"]
+                )
             elif isinstance(f[key], (int, float)):
                 f[key] += child_f.get(key, 0)
 
@@ -253,11 +234,11 @@ def _count_predicates(filter_doc: dict, f: dict) -> None:
     Recursively count predicate complexity inside a $match filter document.
 
     Counts:
-      n_predicates      — total leaf conditions (field: {$op: val} pairs)
-      n_or_clauses      — number of branches in $or expressions
-      n_and_clauses     — number of branches in $and expressions
-      n_regex_predicates — $regex / $options usages
-      n_expr_predicates  — $expr usages (aggregation expressions in match)
+      n_predicates       — total leaf conditions
+      n_or_clauses       — number of branches in $or expressions
+      n_and_clauses      — number of branches in $and expressions
+      n_regex_predicates — $regex usages
+      n_expr_predicates  — $expr usages
       n_elemMatch        — $elemMatch usages
     """
     if not isinstance(filter_doc, dict):
@@ -277,69 +258,65 @@ def _count_predicates(filter_doc: dict, f: dict) -> None:
                 _count_predicates(branch, f)
         elif key == "$regex":
             f["n_regex_predicates"] += 1
-            f["n_predicates"] += 1
+            f["n_predicates"]       += 1
         elif key == "$expr":
             f["n_expr_predicates"] += 1
-            f["n_predicates"] += 1
+            f["n_predicates"]      += 1
         elif key == "$elemMatch":
-            f["n_elemMatch"] += 1
-            f["n_predicates"] += 1
+            f["n_elemMatch"]   += 1
+            f["n_predicates"]  += 1
             _count_predicates(value, f)
         elif key.startswith("$"):
-            # Leaf operator ($gt, $lt, $in, $ne, etc.)
             f["n_predicates"] += 1
         else:
-            # Field name — recurse into its condition document
             if isinstance(value, dict):
                 _count_predicates(value, f)
             else:
-                # field: literal  (equality predicate)
                 f["n_predicates"] += 1
+
+
+# ---------------------------------------------------------------------------
+# Complexity thresholds
+# ---------------------------------------------------------------------------
+
+COMPLEXITY_THRESHOLDS = {
+    "high": {
+        "n_window":             1,
+        "n_facet":              1,
+        "n_graphlookup":        1,
+        "n_union":              1,
+        "n_lookup":             4,
+        "n_group":              4,
+        "total_operators":     15,
+        "n_predicates":        20,
+        "max_memory_bytes":    100 * 1024 * 1024,
+    },
+    "medium": {
+        "n_lookup":             1,
+        "n_group":              1,
+        "n_unwind":             1,
+        "total_operators":      5,
+        "n_predicates":         5,
+        "n_computed_fields":    3,
+    },
+}
+
+HIGH_COMBINATIONS = [
+    ("n_lookup",  "n_group"),
+    ("n_lookup",  "n_window"),
+    ("n_unwind",  "n_group"),
+    ("n_group",   "n_sort"),
+]
 
 
 # ---------------------------------------------------------------------------
 # Classification — derived from the quantitative feature vector
 # ---------------------------------------------------------------------------
 
-# Thresholds — adjust these as you gather data
-COMPLEXITY_THRESHOLDS = {
-    # HIGH triggers
-    "high": {
-        "n_window":          1,    # any $setWindowFields
-        "n_facet":           1,    # any $facet
-        "n_graphlookup":     1,    # any $graphLookup
-        "n_union":           1,    # any $unionWith
-        "n_lookup":          4,    # > 3 joins
-        "n_group":           4,    # > 3 group stages
-        "total_operators":  15,    # very deep operator tree
-        "n_predicates":     20,    # very complex filter logic
-        "max_memory_bytes": 100 * 1024 * 1024,  # 100 MB
-    },
-    # MEDIUM triggers (only reached if no HIGH condition fired)
-    "medium": {
-        "n_lookup":          1,    # any join
-        "n_group":           1,    # any aggregation
-        "n_unwind":          1,    # any array expansion
-        "total_operators":   5,    # multi-stage pipeline
-        "n_predicates":      5,    # moderately complex filter
-        "n_computed_fields": 3,    # non-trivial field computation
-        "n_window_functions":1,    # (already caught by high, belt+suspenders)
-    },
-}
-
-# Combinations that upgrade medium → high regardless of individual counts
-HIGH_COMBINATIONS = [
-    ("n_lookup",  "n_group"),    # join + aggregation
-    ("n_lookup",  "n_window"),   # join + window
-    ("n_unwind",  "n_group"),    # array expand + aggregation
-    ("n_group",   "n_sort"),     # aggregation + sort (common slow path)
-]
-
-
 def classify_from_execution(
     explain_result: dict,
-    wall_time_ms: float,
-    query_type: str,
+    wall_time_ms:   float,
+    query_type:     str,
 ) -> tuple[str, list[str], dict]:
     """
     Derive complexity class from a quantitative feature vector.
@@ -356,7 +333,6 @@ def classify_from_execution(
     f = walk_execution_stages(root_stage)
     f["wall_time_ms"] = wall_time_ms
 
-    # Pull reliable top-level counters
     f["total_docs_examined"] = max(
         f["total_docs_examined"],
         exec_stats.get("totalDocsExamined", 0),
@@ -368,32 +344,24 @@ def classify_from_execution(
 
     reasons = []
 
-    # ---- Check HIGH thresholds ----
     for feature, threshold in COMPLEXITY_THRESHOLDS["high"].items():
         val = f.get(feature, 0)
         if val >= threshold:
-            reasons.append(
-                f"{feature}={val} >= {threshold} (high threshold)"
-            )
+            reasons.append(f"{feature}={val} >= {threshold} (high threshold)")
 
-    # ---- Check HIGH combinations ----
     for feat_a, feat_b in HIGH_COMBINATIONS:
         if f.get(feat_a, 0) > 0 and f.get(feat_b, 0) > 0:
             reasons.append(
-                f"{feat_a}={f[feat_a]} + {feat_b}={f[feat_b]} "
-                f"(dangerous combination)"
+                f"{feat_a}={f[feat_a]} + {feat_b}={f[feat_b]} (dangerous combination)"
             )
 
     if reasons:
         return "high", reasons, f
 
-    # ---- Check MEDIUM thresholds ----
     for feature, threshold in COMPLEXITY_THRESHOLDS["medium"].items():
         val = f.get(feature, 0)
         if val >= threshold:
-            reasons.append(
-                f"{feature}={val} >= {threshold} (medium threshold)"
-            )
+            reasons.append(f"{feature}={val} >= {threshold} (medium threshold)")
 
     if reasons:
         return "medium", reasons, f
@@ -409,10 +377,6 @@ def classify_from_execution(
 # ---------------------------------------------------------------------------
 
 def extract_flat_stats(explain_result: dict, query_type: str) -> dict:
-    """
-    Pull the most useful fields out of explain() into a flat dict.
-    Handles both find and aggregate explain formats.
-    """
     stats = {
         "executionTimeMillis": None,
         "totalDocsExamined":   None,
@@ -445,12 +409,9 @@ def extract_flat_stats(explain_result: dict, query_type: str) -> dict:
         stats["indexUsed"] = find_index(winning_plan)
 
     else:
-        # Aggregate: top-level stats are in executionStats if present,
-        # otherwise derive from the stage list
         es = explain_result.get("executionStats", {})
         stats["executionTimeMillis"] = es.get("executionTimeMillis")
         stats["nReturned"]           = es.get("nReturned")
-        # Stage name from first pipeline stage
         raw_stages = explain_result.get("stages", [])
         if raw_stages:
             first = raw_stages[0]
@@ -469,7 +430,6 @@ def extract_flat_stats(explain_result: dict, query_type: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def run_find_query(collection, query_def: dict, timeout_ms: int):
-    # Validate the query has a filter before touching MongoDB
     if "filter" not in query_def:
         return None, None, "error", "find query is missing 'filter' field", []
 
@@ -488,7 +448,6 @@ def run_find_query(collection, query_def: dict, timeout_ms: int):
             cur = cur.max_time_ms(timeout_ms)
         return cur
 
-    # --- explain pass ---
     try:
         cmd = {"find": collection.name, "filter": filter_doc}
         if projection:
@@ -510,7 +469,6 @@ def run_find_query(collection, query_def: dict, timeout_ms: int):
 
     flat_stats = extract_flat_stats(explain_result, "find")
 
-    # --- timed execution pass ---
     try:
         t0   = time.perf_counter()
         docs = list(make_cursor())
@@ -529,7 +487,6 @@ def run_find_query(collection, query_def: dict, timeout_ms: int):
 
 
 def run_aggregate_query(collection, query_def: dict, timeout_ms: int):
-    # Validate the query has a pipeline before touching MongoDB
     if "pipeline" not in query_def:
         return None, None, "error", "aggregate query is missing 'pipeline' field", []
     if not isinstance(query_def["pipeline"], list):
@@ -543,7 +500,6 @@ def run_aggregate_query(collection, query_def: dict, timeout_ms: int):
     if query_def.get("allowDiskUse", False):
         options["allowDiskUse"] = True
 
-    # --- explain pass ---
     try:
         explain_result = collection.database.command(
             "aggregate",
@@ -559,7 +515,6 @@ def run_aggregate_query(collection, query_def: dict, timeout_ms: int):
 
     flat_stats = extract_flat_stats(explain_result, "aggregate")
 
-    # --- timed execution pass ---
     try:
         t0   = time.perf_counter()
         docs = list(collection.aggregate(pipeline, **options))
@@ -576,6 +531,10 @@ def run_aggregate_query(collection, query_def: dict, timeout_ms: int):
 
     return explain_result, flat_stats, "success", wall, sample
 
+
+# ---------------------------------------------------------------------------
+# Unified result builder
+# ---------------------------------------------------------------------------
 
 def run_query(collection, query_def: dict, timeout_ms: int) -> dict:
     """
@@ -601,7 +560,7 @@ def run_query(collection, query_def: dict, timeout_ms: int) -> dict:
         "static_complexity":            query_def.get("complexity"),
         "execution_complexity":         None,
         "execution_complexity_reasons": None,
-        "execution_features":           None,   # now a full quantitative dict
+        "execution_features":           None,
         "complexity_mismatch":          None,
         "error":                        None,
         "sample_results":               [],
@@ -637,12 +596,9 @@ def run_query(collection, query_def: dict, timeout_ms: int) -> dict:
                 if result["static_complexity"] and exec_class != result["static_complexity"]:
                     result["complexity_mismatch"] = True
         else:
-            # "timeout" or "error" — rest[0] is the message, rest[1] is sample (ignored)
             result["error"] = rest[0]
 
     except Exception as e:
-        # Catch-all: a malformed query_def or unexpected driver error must not
-        # crash the harness — record it and move on.
         result["status"] = "error"
         result["error"]  = f"Unhandled exception: {type(e).__name__}: {e}"
         print(f"\n[ERROR] Unexpected crash on query {result['id']}: {e}")
@@ -650,141 +606,17 @@ def run_query(collection, query_def: dict, timeout_ms: int) -> dict:
     return result
 
 
-def run_aggregate_query(collection, query_def: dict, timeout_ms: int):
-    pipeline = parse_extended_json(query_def.get("pipeline", []))
-
-    options = {}
-    if timeout_ms:
-        options["maxTimeMS"] = timeout_ms
-    if query_def.get("allowDiskUse", False):
-        options["allowDiskUse"] = True
-
-    # --- explain pass ---
-    try:
-        explain_result = collection.database.command(
-            "aggregate",
-            collection.name,
-            pipeline=pipeline,
-            explain=True,
-            **options,
-        )
-    except OperationFailure as e:
-        if "exceeded" in str(e).lower() or e.code == 50:
-            return None, None, "timeout", f"Exceeded {timeout_ms}ms during explain"
-        return None, None, "error", str(e)
-
-    flat_stats = extract_flat_stats(explain_result, "aggregate")
-
-    # --- timed execution pass ---
-    try:
-        t0   = time.perf_counter()
-        docs = list(collection.aggregate(pipeline, **options))
-        wall = round((time.perf_counter() - t0) * 1000, 3)
-    except OperationFailure as e:
-        if "exceeded" in str(e).lower() or e.code == 50:
-            return explain_result, flat_stats, "timeout", f"Exceeded {timeout_ms}ms during execution"
-        return explain_result, flat_stats, "error", str(e)
-
-    flat_stats["nReturned"] = len(docs)
-
-    sample = [make_json_safe({**d, "_id": str(d["_id"])} if "_id" in d else d)
-              for d in docs[:MAX_RESULTS_TO_STORE]]
-
-    return explain_result, flat_stats, "success", wall, sample
-
-
 # ---------------------------------------------------------------------------
-# Unified result builder
+# JSONL loader — handles concatenated objects, blank lines, malformed lines
 # ---------------------------------------------------------------------------
-
-def run_query(collection, query_def: dict, timeout_ms: int) -> dict:
-    """
-    Dispatch to find or aggregate runner, then attach execution classification.
-    Returns a unified result dict regardless of query type.
-    """
-    query_type = "aggregate" if "pipeline" in query_def else "find"
-
-    result = {
-        "id":                           query_def["id"],
-        "description":                  query_def.get("description", ""),
-        "collection":                   query_def["collection"],
-        "query_type":                   query_type,
-        "status":                       None,
-        "wall_time_ms":                 None,
-        "executionTimeMillis":          None,
-        "totalDocsExamined":            None,
-        "totalKeysExamined":            None,
-        "nReturned":                    None,
-        "winningPlanStage":             None,
-        "indexUsed":                    None,
-        # Complexity fields — populated on success
-        "static_complexity":            query_def.get("complexity"),
-        "execution_complexity":         None,
-        "execution_complexity_reasons": None,
-        "execution_features":           None,
-        "complexity_mismatch":          None,   # True when static != execution
-        "error":                        None,
-        "sample_results":               [],
-        "timestamp":                    datetime.now(tz=timezone.utc).isoformat(),
-    }
-
-    if query_type == "find":
-        outcome = run_find_query(collection, query_def, timeout_ms)
-    else:
-        outcome = run_aggregate_query(collection, query_def, timeout_ms)
-
-    # Unpack outcome — (explain, flat_stats, status, payload, [sample])
-    explain_result, flat_stats, status, *rest = outcome
-
-    result["status"] = status
-
-    if status == "success":
-        wall_time_ms, sample = rest
-        result["wall_time_ms"]  = wall_time_ms
-        result["sample_results"] = sample
-        if flat_stats:
-            result.update(flat_stats)
-
-        # Execution-based complexity classification
-        if explain_result:
-            exec_class, exec_reasons, exec_features = classify_from_execution(
-                explain_result, wall_time_ms, query_type
-            )
-            result["execution_complexity"]         = exec_class
-            result["execution_complexity_reasons"] = exec_reasons
-            # Store numeric features only (sets aren't JSON serialisable)
-            result["execution_features"] = {
-                k: v for k, v in exec_features.items()
-                if not isinstance(v, set)
-            }
-            # Flag mismatches between structural and execution classification
-            if result["static_complexity"] and exec_class != result["static_complexity"]:
-                result["complexity_mismatch"] = True
-
-    else:
-        # status is "timeout" or "error" — rest[0] is the error message
-        result["error"] = rest[0]
-
-    return result
-
 
 def load_queries(queries_file: str) -> list[dict]:
-    """
-    Load queries from a JSONL file robustly.
-    Handles:
-    - Normal JSONL (one JSON object per line)
-    - Concatenated objects on the same line (e.g. {...}{...})
-    - Blank lines
-    - Malformed lines (logged as warnings, skipped)
-    """
     query_defs = []
     skipped    = 0
 
     with open(queries_file, encoding="utf-8") as f:
         raw = f.read()
 
-    # Split into individual JSON objects by scanning for top-level braces.
-    # This handles both proper JSONL and run-together objects on one line.
     depth  = 0
     start  = None
     in_str = False
@@ -825,6 +657,10 @@ def load_queries(queries_file: str) -> list[dict]:
     return query_defs
 
 
+# ---------------------------------------------------------------------------
+# Numeric features list (for summary metrics)
+# ---------------------------------------------------------------------------
+
 NUMERIC_FEATURES = [
     "total_operators",
     "n_collscan", "n_ixscan", "n_fetch",
@@ -849,6 +685,10 @@ def _percentile(sorted_values: list, pct: float) -> float:
     hi = min(int(k) + 1, len(sorted_values) - 1)
     return sorted_values[lo] + (sorted_values[hi] - sorted_values[lo]) * (k - lo)
 
+
+# ---------------------------------------------------------------------------
+# Summary metrics — per-class feature averages (SQLStorm Table 6 equivalent)
+# ---------------------------------------------------------------------------
 
 def compute_summary_metrics(all_results: list) -> dict:
     total = len(all_results)
@@ -923,21 +763,16 @@ def compute_summary_metrics(all_results: list) -> dict:
 # Harness loop
 # ---------------------------------------------------------------------------
 
-def run_harness(queries_file, db_name, uri, output_file, timeout_ms, prompt_label):
+def run_harness(queries_file, db_name, uri, output_file, failed_output_file, timeout_ms, prompt_label):
     print(f"Connecting to {uri} ...")
     client = MongoClient(uri)
     db     = client[db_name]
-    print(f"Database : {db_name}")
-    print(f"Queries  : {queries_file}")
-    print(f"Output   : {output_file}")
-    print(f"Timeout  : {timeout_ms} ms\n")
+    print(f"Database     : {db_name}")
+    print(f"Queries      : {queries_file}")
+    print(f"Output       : {output_file}")
+    print(f"Failed output: {failed_output_file}")
+    print(f"Timeout      : {timeout_ms} ms\n")
 
-    # ------------------------------------------------------------------
-    # Log run parameters to yanex so every run is fully reproducible.
-    # yanex.get_params() returns {} when run standalone (python run_harness.py),
-    # and the actual params when run via `yanex run run_harness.py --param ...`
-    # log_metrics() is a no-op in standalone mode, so this is always safe.
-    # ------------------------------------------------------------------
     yanex.log_metrics({
         "param_db":          db_name,
         "param_queries":     str(queries_file),
@@ -946,20 +781,25 @@ def run_harness(queries_file, db_name, uri, output_file, timeout_ms, prompt_labe
     })
 
     query_defs = load_queries(queries_file)
-
     print(f"Loaded {len(query_defs)} queries\n")
 
     os.makedirs(
         os.path.dirname(output_file) if os.path.dirname(output_file) else ".",
         exist_ok=True,
     )
+    os.makedirs(
+        os.path.dirname(failed_output_file) if os.path.dirname(failed_output_file) else ".",
+        exist_ok=True,
+    )
 
-    all_results = []
-    counts      = {"success": 0, "timeout": 0, "error": 0}
+    all_results       = []
+    counts            = {"success": 0, "timeout": 0, "error": 0}
     complexity_counts = {"low": 0, "medium": 0, "high": 0}
-    mismatches  = 0
+    mismatches        = 0
 
-    with open(output_file, "w", encoding="utf-8") as out_f:
+    with open(output_file, "w", encoding="utf-8") as out_f, \
+         open(failed_output_file, "w", encoding="utf-8") as failed_f:
+
         for i, query_def in enumerate(query_defs, 1):
             if not query_def.get("collection"):
                 print(f"  [{i}/{len(query_defs)}] SKIP {query_def.get('id')} — no collection")
@@ -994,13 +834,6 @@ def run_harness(queries_file, db_name, uri, output_file, timeout_ms, prompt_labe
                     f"preds={feats.get('n_predicates', 0)}  "
                     f"complexity={ec}{mismatch_flag}"
                 )
-
-                # ---------------------------------------------------------
-                # Log per-query metrics to yanex.
-                # step=i gives you a time-series you can plot in yanex compare.
-                # Only numeric fields that are always present on success.
-                # ---------------------------------------------------------
-                feats = result.get("execution_features") or {}
                 yanex.log_metrics({
                     "wall_time_ms":             result["wall_time_ms"],
                     "docs_examined":            result.get("totalDocsExamined") or 0,
@@ -1009,7 +842,6 @@ def run_harness(queries_file, db_name, uri, output_file, timeout_ms, prompt_labe
                     "execution_complexity_num": {"low": 1, "medium": 2, "high": 3}.get(
                                                     result.get("execution_complexity"), 0),
                     "is_mismatch":              int(bool(result.get("complexity_mismatch"))),
-                    # Quantitative operator counts
                     "total_operators":          feats.get("total_operators", 0),
                     "n_lookup":                 feats.get("n_lookup", 0),
                     "n_group":                  feats.get("n_group", 0),
@@ -1026,19 +858,30 @@ def run_harness(queries_file, db_name, uri, output_file, timeout_ms, prompt_labe
             elif result["status"] == "timeout":
                 print("TIMEOUT")
                 yanex.log_metrics({"timeout": 1}, step=i)
+                failed_entry = {
+                    **query_def,
+                    "failure_reason": "timeout",
+                    "error":          result.get("error"),
+                }
+                failed_f.write(json.dumps(failed_entry) + "\n")
+                failed_f.flush()
+
             else:
                 print(f"ERROR  {result['error']}")
                 yanex.log_metrics({"error": 1}, step=i)
+                failed_entry = {
+                    **query_def,
+                    "failure_reason": "error",
+                    "error":          result.get("error"),
+                }
+                failed_f.write(json.dumps(failed_entry) + "\n")
+                failed_f.flush()
 
             out_f.write(json.dumps(result) + "\n")
             out_f.flush()
 
-    # ------------------------------------------------------------------
-    # End-of-run summary metrics — logged once without a step so yanex
-    # surfaces them as the headline numbers for this experiment.
-    # ------------------------------------------------------------------
     summary = compute_summary_metrics(all_results)
-    # yanex.log_metrics(summary)
+    yanex.log_metrics(summary)
 
     print(f"\n{'=' * 65}")
     print(f"Results   : {counts['success']} success, "
@@ -1050,16 +893,12 @@ def run_harness(queries_file, db_name, uri, output_file, timeout_ms, prompt_labe
           f"{summary['wall_time_p95']:.1f} / "
           f"{summary['wall_time_p99']:.1f} ms")
     print(f"Saved to  : {output_file}")
+    print(f"Failed to : {failed_output_file}")
 
-    # ------------------------------------------------------------------
-    # Save artifacts to yanex.
-    #   copy_artifact  — copies an existing file into the experiment dir.
-    #   The second argument is the name it will have inside yanex's store.
-    # ------------------------------------------------------------------
-    yanex.copy_artifact(output_file,   "results.jsonl")
-    yanex.copy_artifact(queries_file,  "queries.jsonl")
+    yanex.copy_artifact(output_file,        "results.jsonl")
+    yanex.copy_artifact(queries_file,       "queries.jsonl")
+    yanex.copy_artifact(failed_output_file, "queries_failed.jsonl")
 
-    # Attach the schema if it was used to generate the queries
     schema_path = Path("schema.txt")
     if schema_path.exists():
         yanex.copy_artifact(str(schema_path), "schema.txt")
@@ -1072,20 +911,26 @@ def run_harness(queries_file, db_name, uri, output_file, timeout_ms, prompt_labe
 # ---------------------------------------------------------------------------
 
 def main():
-    # Yanex params take precedence over argparse defaults when run via
-    # `yanex run run_harness.py --param db=mydb`.
-    # In standalone mode get_params() returns {}, so argparse defaults apply.
     params = yanex.get_params()
 
     parser = argparse.ArgumentParser(description="MongoDB query benchmark harness")
-    parser.add_argument("--queries",  default=params.get("queries", "queries.jsonl"))
-    parser.add_argument("--db",       default=params.get("db",      "mathstackexchange"))
-    parser.add_argument("--uri",      default=params.get("uri",     "mongodb://localhost:27017"))
-    parser.add_argument("--out",      default=params.get("out",     "results/results.jsonl"))
-    parser.add_argument("--timeout",  type=int,
+    parser.add_argument("--queries",
+                        default=params.get("queries", "queries.jsonl"))
+    parser.add_argument("--db",
+                        default=params.get("db", "mathstackexchange"))
+    parser.add_argument("--uri",
+                        default=params.get("uri", "mongodb://localhost:27017"))
+    parser.add_argument("--out",
+                        default=params.get("out", "results/results.jsonl"))
+    parser.add_argument("--failed-out",
+                        default=params.get("failed_out", "results/queries_failed.jsonl"),
+                        help="Path to write failed query definitions to")
+    parser.add_argument("--timeout",
+                        type=int,
                         default=int(params.get("timeout", 10_000)),
                         help="Per-query timeout in milliseconds")
-    parser.add_argument("--prompt",   default=params.get("prompt",  "unknown"),
+    parser.add_argument("--prompt",
+                        default=params.get("prompt", "unknown"),
                         help="Label for the prompt set used (e.g. P1, P2) — stored as metadata")
     args = parser.parse_args()
 
@@ -1094,6 +939,7 @@ def main():
         db_name=args.db,
         uri=args.uri,
         output_file=args.out,
+        failed_output_file=args.failed_out,
         timeout_ms=args.timeout,
         prompt_label=args.prompt,
     )
