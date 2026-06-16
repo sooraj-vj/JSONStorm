@@ -39,11 +39,9 @@ model = genai.GenerativeModel(MODEL_NAME)
 # Prompts
 # -------------------------------------------------
 
-def build_prompt(schema_text: str, query_id: int, base_prompt: str, query_type: str) -> str:
-
-    if query_type == "find":
-        return f"""
-You are an expert at generating MongoDB queries using the find method for performance benchmarking.
+def build_prompt(schema_text: str, query_id: int, base_prompt: str) -> str:
+    return f"""
+You are an expert at generating MongoDB queries for performance benchmarking.
 
 {base_prompt}
 
@@ -56,49 +54,16 @@ Return ONE query as valid JSON with EXACTLY these fields:
 - id (string, e.g. "Q{query_id}")
 - description (short sentence)
 - collection (string)
-- filter (required — a MongoDB filter document, e.g. {{}})
-- projection (optional)
-- sort (optional)
-- limit (optional)
+- Either:
+  - filter (required for find queries) + optionally: projection, sort, limit
+  - pipeline (required for aggregation — array of MongoDB stages)
 
 Rules:
-- Output JSON only (no markdown, no explanation)
-- Do NOT wrap output in ``` or ```json
-- Query must use find() style — do NOT include a "pipeline" field
-- Query must be realistic
-""".strip()
-
-    elif query_type == "aggregate":
-        return f"""
-You are an expert at generating MongoDB aggregation queries for analytical performance benchmarking.
-
-{base_prompt}
-
-Use ONLY the collections and fields described below.
-Do NOT invent fields.
-
-{schema_text}
-
-Return ONE query as valid JSON with EXACTLY these fields:
-- id (string, e.g. "Q{query_id}")
-- description (short sentence)
-- collection (string)
-- pipeline (required — array of MongoDB aggregation stages)
-
-Allowed pipeline stages include:
-- $match, $group, $lookup, $unwind, $sort, $limit, $setWindowFields, $facet
-
-Rules:
-- Output STRICT JSON only (no markdown, no explanation, no comments)
+- Output strict JSON only (no markdown, no explanation, no comments)
 - Do NOT wrap output in ``` or ```json
 - Do NOT include any // or /* */ style comments anywhere in the JSON
-- Do NOT include a "filter" field — use $match inside the pipeline instead
-- Query must be realistic and non-trivial
-- Prefer multi-stage pipelines over single-stage queries
+- Do NOT include both 'filter' and 'pipeline' in the same query
 """.strip()
-
-    else:
-        raise ValueError(f"Unknown query_type: {query_type!r}")
 
 
 # -------------------------------------------------
@@ -120,24 +85,20 @@ def next_query_id() -> int:
         return sum(1 for _ in f) + 1
 
 
-def validate_query(obj: dict, query_type: str) -> str | None:
+def validate_query(obj: dict) -> str | None:
     """
-    Returns an error string if the query is invalid for its type, else None.
-    Ensures find queries have 'filter' and aggregate queries have 'pipeline',
-    and that neither has bled into the wrong type.
+    Returns an error string if the query is invalid, else None.
+    Infers type from whichever key is present (filter vs pipeline).
     """
-    if query_type == "find":
-        if "pipeline" in obj:
-            return "find query must not contain a 'pipeline' field"
-        if "filter" not in obj:
-            return "find query is missing required 'filter' field"
-    elif query_type == "aggregate":
-        if "filter" in obj and "pipeline" not in obj:
-            return "aggregate query has 'filter' but no 'pipeline' — looks like a find query"
-        if "pipeline" not in obj:
-            return "aggregate query is missing required 'pipeline' field"
-        if not isinstance(obj["pipeline"], list):
-            return f"'pipeline' must be a list, got {type(obj['pipeline']).__name__}"
+    has_filter   = "filter" in obj
+    has_pipeline = "pipeline" in obj
+
+    if has_filter and has_pipeline:
+        return "query must not contain both 'filter' and 'pipeline'"
+    if not has_filter and not has_pipeline:
+        return "query must contain either 'filter' (find) or 'pipeline' (aggregate)"
+    if has_pipeline and not isinstance(obj["pipeline"], list):
+        return f"'pipeline' must be a list, got {type(obj['pipeline']).__name__}"
     return None
 
 
@@ -157,7 +118,6 @@ def generate_query(
     schema_text: str,
     query_id:    int,
     base_prompt: str,
-    query_type:  str,
     call_index:  int,
 ) -> dict | None:
     """
@@ -169,8 +129,9 @@ def generate_query(
       - api_attempt        : which attempt succeeded (1, 2, or 3)
       - api_success        : 1 if the call produced a valid query, 0 otherwise
       - api_validation_fail: 1 if the call returned JSON but failed validation
+      - api_query_type     : inferred type ("find" or "aggregate")
     """
-    prompt = build_prompt(schema_text, query_id, base_prompt, query_type)
+    prompt = build_prompt(schema_text, query_id, base_prompt)
 
     for attempt in range(1, MAX_RETRIES + 1):
         text = ""
@@ -217,11 +178,13 @@ def generate_query(
             # --- Parse ---
             obj = json.loads(text)
 
-            # --- Type-specific validation ---
-            error = validate_query(obj, query_type)
+            # --- Validation ---
+            error = validate_query(obj)
             if error:
                 validation_failed = 1
                 raise ValueError(f"Validation failed: {error}")
+
+            inferred_type = "aggregate" if "pipeline" in obj else "find"
 
             # --- Log successful call metrics ---
             yanex.log_metrics({
@@ -232,6 +195,7 @@ def generate_query(
                 "api_attempt":         attempt,
                 "api_success":         1,
                 "api_validation_fail": 0,
+                "api_query_type":      inferred_type,
             }, step=call_index)
 
             return obj
@@ -275,9 +239,8 @@ def generate_query(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--prompt",      default="P1")
+    parser.add_argument("--prompt",      default="p1")
     parser.add_argument("--num-queries", type=int, default=1)
-    parser.add_argument("--query-type",  default="find", choices=["find", "aggregate"])
     args = parser.parse_args()
 
     schema_text = load_schema()
@@ -294,28 +257,19 @@ def main():
 
     # Log run-level parameters so every generation run is reproducible
     yanex.log_metrics({
-        "param_model":      MODEL_NAME,
-        "param_prompt":     prompt_key,
-        "param_query_type": args.query_type,
+        "param_model":       MODEL_NAME,
+        "param_prompt":      prompt_key,
         "param_num_queries": num_queries,
     })
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    # Accumulators for end-of-run summary
-    total_latency_ms   = 0.0
-    total_input_tokens = 0
-    total_output_tokens = 0
-    total_api_calls    = 0
-
     while generated < num_queries:
-        qid = next_query_id()
-        attempted   += 1
-        call_index   = attempted  # used as the yanex step
+        qid        = next_query_id()
+        attempted  += 1
+        call_index  = attempted  # used as the yanex step
 
-        query = generate_query(
-            schema_text, qid, base_prompt, args.query_type, call_index
-        )
+        query = generate_query(schema_text, qid, base_prompt, call_index)
 
         if query is None:
             failed += 1
@@ -337,9 +291,6 @@ def main():
         generated += 1
         print(f"[OK] Generated {query.get('id', f'Q{qid}')} ({generated}/{num_queries})")
 
-    # ------------------------------------------------------------------
-    # End-of-run summary — logged once so yanex shows headline numbers
-    # ------------------------------------------------------------------
     print(f"\n[DONE] Generated {generated}/{num_queries} queries "
           f"using prompt '{prompt_key}' ({failed} failed attempts)")
 

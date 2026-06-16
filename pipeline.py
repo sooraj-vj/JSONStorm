@@ -28,7 +28,6 @@ def main():
     timeout_ms = int(params.get("TIMEOUT_MS", 20000))
     prompt_choice = yanex.get_param("PROMPT", default="p3")
     num_queries = int(params.get("NUM_QUERIES", 1))
-    query_type = params.get("QUERY_TYPE", "find")
 
     print("YANEX PARAMS:", params)
 
@@ -90,10 +89,9 @@ def main():
         "Generating queries (Gemini)",
         [
             PYTHON,
-            "generate_queries.py",
+            "generate_queries-2.py",
             "--prompt", prompt_choice,
             "--num-queries", str(num_queries),
-            "--query-type", query_type
         ]
     )
 
@@ -147,15 +145,17 @@ def main():
     }
 
     if successful:
+        examined = [r["totalDocsExamined"] for r in successful if r["totalDocsExamined"] is not None]
+        keys     = [r["totalKeysExamined"] for r in successful if r["totalKeysExamined"] is not None]
+
         metrics.update({
             "avg_wall_time_ms": mean(r["wall_time_ms"] for r in successful),
             "max_wall_time_ms": max(r["wall_time_ms"] for r in successful),
-            "avg_docs_examined": mean(r["totalDocsExamined"] for r in successful),
-            "avg_keys_examined": mean(r["totalKeysExamined"] for r in successful),
+            "avg_docs_examined": mean(examined) if examined else None,
+            "avg_keys_examined": mean(keys) if keys else None,
         })
     
     yanex.log_metrics(metrics)
-    yanex.log_metrics({"query_type": query_type})
     yanex.log_metrics({"prompt_choice": prompt_choice})
 
 
